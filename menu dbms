@@ -1,45 +1,58 @@
 #!/bin/bash
 
 #functions dbms
-readonly DBS="databases";
+clear
+DBMS="databases";
+if [[ ! -d ./$DBMS ]];
+then 
+    mkdir $DBMS
+fi    
+
 
 function createDB {
     read -p "Enter Database Name : " dbName;
-	if [[ ! -d $DBS/$dbName ]];
+	if [[ ! -d ./$DBMS/$dbName ]];
 	then 
-           mkdir $DBS/$dbName;
+        mkdir ./$DBMS/$dbName;
 		if [[ $? == 0 ]]; 
 		then
 		  echo $dbName" Database Created Successfully" ;
 		else	
-		 echo "Error Done While Creating the Database" ;
+		 echo "Error While Creating the Database" ;
 		fi
 	else	
-	  echo "This Database is Exists";
+	  echo "Database Already Exists";
 	fi
 
 }
 function dropDB {
   read -p "Enter Database Name : " dbName;
-   rm -r $DBS/$dbName 
-	  if [[ $? == 0 ]];
-	  then
-	    echo "Database Dropped Successfully"
-	  else
-	    echo "Database Not found"
-	  fi
+  if [[ -d ./$DBMS/$dbName ]];
+  then
+      rm -r ./$DBMS/$dbName 
+	  echo "Database Dropped Successfully"
+  else
+	  echo "Database Not found"
+  fi
 	 
 }
 function displayTable {
     read -p "Enter Database Name : " dbName;
-    read -p "Enter Table Name : " tableName;
-	if [[ -f $DBS/$dbName/$tableName ]];
+    if [[ -d ./$DBMS/$dbName ]];
 	then 
-           cd $DBS/$dbName
-	   cat $tableName
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
+	       cat $tableName
+	   else
+           echo "Table Not found";      
+	   fi
+       cd ../..
 	else
-           echo "Table Not found";
+           echo "Database Not found";
 	fi
+
 }
 #Under development (datatypes)
 function sortTable {
@@ -77,20 +90,19 @@ function sortTable {
 
 #function show menu
 show_menus() {
-	
 	echo "~~~~~~~~~~~~~~~~~~~~~"	
 	echo " D B M S- M E N U"
 	echo "~~~~~~~~~~~~~~~~~~~~~"
-        echo "1. Create Database"
+    echo "1. Create Database"
 	echo "2. List Datebases"
 	echo "3. Drop Datebase"
 	echo "4. Create Table"
 	echo "5. Alter Table"
 	echo "6. Add Record"
-	echo "7. Edit Records"
-	echo "8. Delete Records"
+	echo "7. Edit Record"
+	echo "8. Delete Record"
 	echo "9. Select Records" 
-        echo "10. Display Table"
+    echo "10. Display A Table"
 	echo "11. Sort Table"
 	echo "12. Drop Table" 
 	echo "13. Exit"
@@ -99,22 +111,22 @@ show_menus() {
 #function read
 read_options(){
 	local choice
-	read -p "Enter choice [ 1 - 13 ] " choice
+	read -p "Enter A Choice [ 1 - 13 ] " choice
 	case $choice in
 		1)createDB;;
-		2)ls $DBS;;
+		2)ls $DBMS;;
 		3)dropDB;;
 		4) ;;
 		5) ;;
 		6) ;;
-                7) ;;
+        7) ;;
 		8) ;;
 		9) ;;
 		10)displayTable;;
 		11)sortTable;;
 		12);;
 		13) exit 0;;
-		*) echo "error"
+		*) echo "Invalid Option"
 	esac
 }
 
