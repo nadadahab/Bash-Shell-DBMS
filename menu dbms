@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#functions dbms
+
+
+
+#function show menu
+show_menus() {
+	clear
+	echo "~~~~~~~~~~~~~~~~~~~~~"	
+	echo " D B M S- M E N U"
+	echo "~~~~~~~~~~~~~~~~~~~~~"
+	echo "1. Create Table"
+	echo "2. Alter Table"
+	echo "3. Add Record"
+	echo "4. Edit Records"
+	echo "5. Delete Records"
+	echo "6. Select Records" 
+  echo "7. Display Table"
+	echo "8. Sort Table"
+	echo "9. Drop Table" 
+	echo "10. Exit"
+}
+
+#function read
+read_options(){
+	local choice
+	read -p "Enter choice [ 1 - 10 ] " choice
+	case $choice in
+		1) ;;
+		2) ;;
+		3) ;;
+		4) ;;
+		5) ;;
+		6) ;;
+    7) ;;
+		8) ;;
+		9) ;;
+		10) exit 0;;
+		*) echo "error"
+	esac
+}
+
+while true
+do
+ 
+	show_menus
+	read_options
+done
