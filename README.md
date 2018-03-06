@@ -1,0 +1,2 @@
+# ymn
+bash script DBMS
