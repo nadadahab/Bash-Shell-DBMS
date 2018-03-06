@@ -16,7 +16,7 @@ show_menus() {
 	echo "4. Edit Records"
 	echo "5. Delete Records"
 	echo "6. Select Records" 
-  echo "7. Display Table"
+        echo "7. Display Table"
 	echo "8. Sort Table"
 	echo "9. Drop Table" 
 	echo "10. Exit"
