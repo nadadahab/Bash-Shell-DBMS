@@ -7,7 +7,7 @@ function createDB {
 	read -p "Enter Database Name : " dbName;
 	if [[ ! -d $DBS/$dbName ]];
 		then  sudo mkdir $DBS/$dbName;
-				if [[ $? -eq 0 ]]; then
+				if [[ $? == 0 ]]; then
 					echo $dbName" Database Created Successfully" ;
 				else	
 					echo "Error Done While Creating the Database" ;
