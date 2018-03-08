@@ -4,30 +4,76 @@
 readonly DBS="databases";
 
 function createDB {
-	read -p "Enter Database Name : " dbName;
+    read -p "Enter Database Name : " dbName;
 	if [[ ! -d $DBS/$dbName ]];
-		then  sudo mkdir $DBS/$dbName;
-				if [[ $? == 0 ]]; then
-					echo $dbName" Database Created Successfully" ;
-				else	
-					echo "Error Done While Creating the Database" ;
-				fi
+	then 
+           mkdir $DBS/$dbName;
+		if [[ $? == 0 ]]; 
+		then
+		  echo $dbName" Database Created Successfully" ;
+		else	
+		 echo "Error Done While Creating the Database" ;
+		fi
 	else	
-		echo "This Database is Exists";
+	  echo "This Database is Exists";
 	fi
 
 }
 function dropDB {
   read -p "Enter Database Name : " dbName;
-  sudo rm -r $DBS/$dbName 
-  if [[ $? == 0 ]];
-   then
-    echo "Database Dropped Successfully"
-  else
-    echo "Database Not found"
-  fi
- 
+   rm -r $DBS/$dbName 
+	  if [[ $? == 0 ]];
+	  then
+	    echo "Database Dropped Successfully"
+	  else
+	    echo "Database Not found"
+	  fi
+	 
 }
+function displayTable {
+    read -p "Enter Database Name : " dbName;
+    read -p "Enter Table Name : " tableName;
+	if [[ -f $DBS/$dbName/$tableName ]];
+	then 
+           cd $DBS/$dbName
+	   cat $tableName
+	else
+           echo "Table Not found";
+	fi
+}
+#Under development (datatypes)
+function sortTable {
+    read -p "Enter Database Name : " dbName;
+    read -p "Enter Table Name : " tableName;
+    
+	if [[ -f $DBS/$dbName/$tableName ]];
+	then 
+	 read -p "Enter Field Name that You Want Sort By It " Field
+	 read -p "Enter ASC For Ascend​ing , DESC For Descending " choice
+	   if [[ $Field == String ]]
+	   then
+		  case $choice in
+			ASC)
+			  sort $tableName;;
+			DESC) 
+		          sort -r $tableName;;
+			*) echo "error"
+		  esac
+	   else
+                  case $choice in
+			ASC)
+			  sort -n $tableName;;
+			DESC) 
+		          sort -nr $tableName;;
+			*) echo "error"
+		  esac
+           fi 
+	else
+           echo "Table Not found";
+	fi
+}
+
+
 
 #function show menu
 show_menus() {
@@ -64,8 +110,8 @@ read_options(){
                 7) ;;
 		8) ;;
 		9) ;;
-		10) ;;
-		11) ;;
+		10)displayTable;;
+		11)sortTable;;
 		12);;
 		13) exit 0;;
 		*) echo "error"
