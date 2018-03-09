@@ -63,7 +63,7 @@ function createTable {
 	   then 
 	       echo "Table Already Exists"
 	   else
-           sep="|"
+           sep=":"
            newLine="\n"
            pKeyFlag="0"
            metaData="Field"$sep"Type"$sep"Key"$sep"Default"$sep"Unique"$sep"Null"
@@ -244,14 +244,30 @@ function dropTable {
            echo "Database Not found";
 	fi
 }
+function selectRecord {
+	read -p "Enter Database Name : " dbName;
+    cd ./$DBMS/$dbName
+	read -p "Enter Table Name : " tableName;
+	read -p "Enter value that you want to search : " value;
+	result=$(sed -n -e'/'$value'/p' $tableName)
+    
+        if [ -z $result ]
+        then
+          echo "Not Found"
+        else
+           echo $result
+            
+        fi
 
+    cd
+}
 
 #function show menu
 show_menus() {
 	echo "~~~~~~~~~~~~~~~~~~~~~"	
 	echo " D B M S- M E N U"
 	echo "~~~~~~~~~~~~~~~~~~~~~"
-    echo "1. Create Database"
+        echo "1. Create Database"
 	echo "2. List Datebases"
 	echo "3. Drop Datebase"
 	echo "4. Create Table"
@@ -260,7 +276,7 @@ show_menus() {
 	echo "7. Edit Record"
 	echo "8. Delete Record"
 	echo "9. Select Records" 
-    echo "10. Display A Table"
+        echo "10. Display A Table"
 	echo "11. Sort Table"
 	echo "12. Drop Table" 
 	echo "13. Exit"
@@ -277,9 +293,9 @@ read_options(){
 		4)createTable;;
 		5)alterTable;;
 		6) ;;
-        7) ;;
+                7) ;;
 		8) ;;
-		9) ;;
+		9)selectRecord;;
 		10)displayTable;;
 		11)sortTable;;
 		12)dropTable;;
