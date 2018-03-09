@@ -184,36 +184,42 @@ function createTable {
            echo "Database Not found";
 	fi
 }
-#Under development (datatypes)
 function sortTable {
     read -p "Enter Database Name : " dbName;
     read -p "Enter Table Name : " tableName;
     
 	if [[ -f ./$DBMS/$dbName/$tableName ]];
 	then 
+         cd ./$DBMS/$dbName
 	 read -p "Enter Field Name that You Want Sort By It " Field
+        Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
 	 read -p "Enter ASC For Ascending , DESC For Descending " choice
-	   if [[ $Field == String ]]
-	   then
+	   fname=$(awk 'BEGIN{FS="|"}{if($1=="'$Field'"){print $2}}' .$tableName)
+		 if [[ $fname == 'str' ]]
+	         then
 		  case $choice in
 			ASC)
-			  sort $tableName;;
+			  sort -t: -k $Fieldnum $tableName;;
 			DESC) 
-		          sort -r $tableName;;
+		          sort -r -t: -k $Fieldnum $tableName;;
 			*) echo "error"
 		  esac
-	   else
+	          else
                   case $choice in
 			ASC)
-			  sort -n $tableName;;
-			DESC) 
-		          sort -nr $tableName;;
+			  sort -n -t: -k $Fieldnum  $tableName;;
+			DESC)
+		          sort -nr -t: -k $Fieldnum  $tableName;;
 			*) echo "error"
 		  esac
            fi 
+		 
+		cd
+	   
 	else
            echo "Table Not found";
 	fi
+	
 }
 function dropTable {
     read -p "Enter Database Name : " dbName;
