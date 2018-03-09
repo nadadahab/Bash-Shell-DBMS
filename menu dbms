@@ -54,6 +54,7 @@ function displayTable {
 	fi
 }
 function createTable {
+    echo "$columns"
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
 	then 
@@ -70,7 +71,6 @@ function createTable {
            read -p "Enter Number Of Columns : " colN;
            for((i=1;i<=colN;i++))
            {
-             echo "$pKeyFlag"
              read -p "Enter The Name Of Column No.$i : " colName;
              echo "Type Of Column $colName : "
              select type in int str
@@ -162,9 +162,9 @@ function createTable {
              fi
              if [[ $i == $colN ]]; 
              then
-             columns=$columns$colName
+             columns+=$colName;
              else
-             columns=$columns$colName$sep
+             columns+=$colName$sep;
              fi
              
            }
@@ -172,6 +172,7 @@ function createTable {
         echo -e $metaData  >> .$tableName
         touch $tableName
         echo -e $columns >> $tableName
+        columns=""
         if [[ $? == 0 ]]
         then
           echo "Table Created Successfully"
@@ -186,12 +187,13 @@ function createTable {
 }
 function sortTable {
     read -p "Enter Database Name : " dbName;
-    read -p "Enter Table Name : " tableName;
-    
-	if [[ -f ./$DBMS/$dbName/$tableName ]];
+    if [[ -d ./$DBMS/$dbName ]];
 	then 
-         cd ./$DBMS/$dbName
-	 read -p "Enter Field Name that You Want Sort By It " Field
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
+	 read -p "Enter Field Name that You Want Sort By : " Field
         Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
 	 read -p "Enter ASC For Ascending , DESC For Descending " choice
 	   fname=$(awk 'BEGIN{FS="|"}{if($1=="'$Field'"){print $2}}' .$tableName)
@@ -202,7 +204,7 @@ function sortTable {
 			  sort -t: -k $Fieldnum $tableName;;
 			DESC) 
 		          sort -r -t: -k $Fieldnum $tableName;;
-			*) echo "error"
+			*) echo "Invalid Choice"
 		  esac
 	          else
                   case $choice in
@@ -210,14 +212,15 @@ function sortTable {
 			  sort -n -t: -k $Fieldnum  $tableName;;
 			DESC)
 		          sort -nr -t: -k $Fieldnum  $tableName;;
-			*) echo "error"
+			*) echo "Invalid Choice"
 		  esac
            fi 
-		 
-		cd
-	   
+ else
+           echo "Table Not found";      
+	   fi
+       cd ../..
 	else
-           echo "Table Not found";
+           echo "Database Not found";
 	fi
 	
 }
@@ -245,9 +248,13 @@ function dropTable {
 	fi
 }
 function selectRecord {
-	read -p "Enter Database Name : " dbName;
-    cd ./$DBMS/$dbName
-	read -p "Enter Table Name : " tableName;
+    read -p "Enter Database Name : " dbName;
+    if [[ -d ./$DBMS/$dbName ]];
+	then 
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
 	read -p "Enter value that you want to search : " value;
 	result=$(sed -n -e'/'$value'/p' $tableName)
     
@@ -259,7 +266,13 @@ function selectRecord {
             
         fi
 
-    cd
+  else
+           echo "Table Not found";      
+	   fi
+       cd ../..
+	else
+           echo "Database Not found";
+	fi
 }
 
 #function show menu
@@ -267,7 +280,7 @@ show_menus() {
 	echo "~~~~~~~~~~~~~~~~~~~~~"	
 	echo " D B M S- M E N U"
 	echo "~~~~~~~~~~~~~~~~~~~~~"
-        echo "1. Create Database"
+    echo "1. Create Database"
 	echo "2. List Datebases"
 	echo "3. Drop Datebase"
 	echo "4. Create Table"
