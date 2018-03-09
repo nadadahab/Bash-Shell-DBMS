@@ -52,17 +52,147 @@ function displayTable {
 	else
            echo "Database Not found";
 	fi
-
+}
+function createTable {
+    read -p "Enter Database Name : " dbName;
+    if [[ -d ./$DBMS/$dbName ]];
+	then 
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
+	       echo "Table Already Exists"
+	   else
+           sep="|"
+           newLine="\n"
+           pKeyFlag="0"
+           metaData="Field"$sep"Type"$sep"Key"$sep"Default"$sep"Unique"$sep"Null"
+           read -p "Enter Number Of Columns : " colN;
+           for((i=1;i<=colN;i++))
+           {
+             echo "$pKeyFlag"
+             read -p "Enter The Name Of Column No.$i : " colName;
+             echo "Type Of Column $colName : "
+             select type in int str
+             do
+               case $type in
+                   int) colType="int";break;;
+                   str) colType="str";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             if [[ $pKeyFlag == "0" ]];
+             then
+                 echo "Is Column $colName a Primary Key? "
+                 select pk in yes no
+                 do
+                   case $pk in
+                       yes) 
+                       pKeyFlag="1"
+                       primaryKey="PK";
+                       isUnique="yes";
+                       acceptNull="no"
+                       defaultValue=""
+                       metaData+=$newLine$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+                       break;;
+                       no) 
+                       primaryKey="";
+                       echo "Is Column $colName Unique? "
+                       select unique in yes no
+                       do
+                         case $unique in
+                             yes) isUnique="yes";break;;
+                             no) isUnique="no";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       echo "Does Column $colName Accept NULL? "
+                       select null in yes no
+                       do
+                         case $null in
+                             yes) acceptNull="yes";break;;
+                             no) acceptNull="no";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       echo "Does Column $colName Have a Default Value? "
+                       select default in yes no
+                       do
+                         case $default in
+                             yes) read -p "Enter The Default Value Of Column $colName : " defaultValue;break;;
+                             no) defaultValue="";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       metaData+=$newLine$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+                       break;;
+                       *) echo "Invalid Option";;
+                   esac
+                 done           
+             else
+             primaryKey="";
+             echo "Is Column $colName Unique? "
+             select unique in yes no
+             do
+               case $unique in
+                   yes) isUnique="yes";break;;
+                   no) isUnique="no";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             echo "Does Column $colName Accept NULL? "
+             select null in yes no
+             do
+               case $null in
+                   yes) acceptNull="yes";break;;
+                   no) acceptNull="no";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             echo "Does Column $colName Have a Default Value? "
+             select default in yes no
+             do
+               case $default in
+                   yes) read -p "Enter The Default Value Of Column $colName : " defaultValue;break;;
+                   no) defaultValue="";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             metaData+=$newLine$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+             fi
+             if [[ $i == $colN ]]; 
+             then
+             columns=$columns$colName
+             else
+             columns=$columns$colName$sep
+             fi
+             
+           }
+        touch .$tableName
+        echo -e $metaData  >> .$tableName
+        touch $tableName
+        echo -e $columns >> $tableName
+        if [[ $? == 0 ]]
+        then
+          echo "Table Created Successfully"
+        else
+          echo "Error Creating Table $tableName"     
+	    fi
+       fi
+        cd ../..
+	else
+           echo "Database Not found";
+	fi
 }
 #Under development (datatypes)
 function sortTable {
     read -p "Enter Database Name : " dbName;
     read -p "Enter Table Name : " tableName;
     
-	if [[ -f $DBS/$dbName/$tableName ]];
+	if [[ -f ./$DBMS/$dbName/$tableName ]];
 	then 
 	 read -p "Enter Field Name that You Want Sort By It " Field
-	 read -p "Enter ASC For Ascend​ing , DESC For Descending " choice
+	 read -p "Enter ASC For Ascending , DESC For Descending " choice
 	   if [[ $Field == String ]]
 	   then
 		  case $choice in
@@ -85,7 +215,29 @@ function sortTable {
            echo "Table Not found";
 	fi
 }
-
+function dropTable {
+    read -p "Enter Database Name : " dbName;
+    if [[ -d ./$DBMS/$dbName ]];
+	then 
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
+	       rm $tableName .$tableName 
+           if [[ $? == 0 ]]
+           then
+               echo "Table Dropped Successfully"
+           else
+               echo "Error Dropping Table $tableName"
+           fi
+	   else
+           echo "Table Not found";      
+	   fi
+       cd ../..
+	else
+           echo "Database Not found";
+	fi
+}
 
 
 #function show menu
@@ -116,17 +268,17 @@ read_options(){
 		1)createDB;;
 		2)ls $DBMS;;
 		3)dropDB;;
-		4) ;;
-		5) ;;
+		4)createTable;;
+		5)alterTable;;
 		6) ;;
         7) ;;
 		8) ;;
 		9) ;;
 		10)displayTable;;
 		11)sortTable;;
-		12);;
+		12)dropTable;;
 		13) exit 0;;
-		*) echo "Invalid Option"
+		*) echo "Invalid Option";;
 	esac
 }
 
