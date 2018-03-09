@@ -186,40 +186,44 @@ function createTable {
 }
 function sortTable {
     read -p "Enter Database Name : " dbName;
-    read -p "Enter Table Name : " tableName;
-    
-	if [[ -f ./$DBMS/$dbName/$tableName ]];
+    if [[ -d ./$DBMS/$dbName ]];
 	then 
+        read -p "Enter Table Name : " tableName;
+        
+	    if [[ -f ./$DBMS/$dbName/$tableName ]];
+	    then 
          cd ./$DBMS/$dbName
-	 read -p "Enter Field Name that You Want Sort By It " Field
-        Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
-	 read -p "Enter ASC For Ascending , DESC For Descending " choice
-	   fname=$(awk 'BEGIN{FS="|"}{if($1=="'$Field'"){print $2}}' .$tableName)
-		 if [[ $fname == 'str' ]]
-	         then
-		  case $choice in
-			ASC)
-			  sort -t: -k $Fieldnum $tableName;;
-			DESC) 
-		          sort -r -t: -k $Fieldnum $tableName;;
-			*) echo "error"
-		  esac
-	          else
-                  case $choice in
-			ASC)
-			  sort -n -t: -k $Fieldnum  $tableName;;
-			DESC)
-		          sort -nr -t: -k $Fieldnum  $tableName;;
-			*) echo "error"
-		  esac
-           fi 
-		 
-		cd
-	   
+	     read -p "Enter Field Name that You Want Sort By It " Field
+            Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
+	     read -p "Enter ASC For Ascending , DESC For Descending " choice
+	       ff=$(awk 'BEGIN{FS="|"}{if($1=="'$Field'"){print $2}}' .$tableName)
+		     if [[ $ff == 'str' ]]
+	             then
+		      case $choice in
+			    ASC)
+			      sort -t: -k $Fieldnum $tableName;;
+			    DESC) 
+		              sort -r -t: -k $Fieldnum $tableName;;
+			    *) echo "error"
+		      esac
+	              else
+                      case $choice in
+			    ASC)
+			      sort -n -t: -k $Fieldnum  $tableName;;
+			    DESC)
+		              sort -nr -t: -k $Fieldnum  $tableName;;
+			    *) echo "error"
+		      esac
+               fi 
+		     
+		    cd
+	       
+	    else
+               echo "Table Not found";
+	    fi
 	else
-           echo "Table Not found";
+           echo "Database Not found";
 	fi
-	
 }
 function dropTable {
     read -p "Enter Database Name : " dbName;
@@ -246,20 +250,32 @@ function dropTable {
 }
 function selectRecord {
 	read -p "Enter Database Name : " dbName;
-    cd ./$DBMS/$dbName
-	read -p "Enter Table Name : " tableName;
-	read -p "Enter value that you want to search : " value;
-	result=$(sed -n -e'/'$value'/p' $tableName)
-    
-        if [ -z $result ]
-        then
-          echo "Not Found"
-        else
-           echo $result
-            
-        fi
+    if [[ -d ./$DBMS/$dbName ]];
+	then 
+        cd ./$DBMS/$dbName
+	    read -p "Enter Table Name : " tableName;
+        if [[ -f $tableName ]];
+	   then 
+	        read -p "Enter value that you want to search : " value;
+	        result=$(sed -n -e'/'$value'/p' $tableName)
 
-    cd
+                if [ -z $result ]
+                then
+                  echo "Not Found"
+                else
+                   echo $result
+                   
+              awk 'BEGIN {FS = ":" ; print "'$result'"}' $tableName > $tableName.html
+
+                fi
+            
+        else
+            echo "Table Not found";      
+	   fi
+        cd
+    else 
+        echo "Database Not found";
+	fi
 }
 
 #function show menu
