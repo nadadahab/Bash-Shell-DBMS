@@ -54,7 +54,6 @@ function displayTable {
 	fi
 }
 function createTable {
-    echo "$columns"
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
 	then 
@@ -222,7 +221,6 @@ function sortTable {
 	else
            echo "Database Not found";
 	fi
-	
 }
 function dropTable {
     read -p "Enter Database Name : " dbName;
@@ -248,30 +246,33 @@ function dropTable {
 	fi
 }
 function selectRecord {
-    read -p "Enter Database Name : " dbName;
+
+	read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
 	then 
-       cd ./$DBMS/$dbName
-       read -p "Enter Table Name : " tableName;
-	   if [[ -f $tableName ]];
+        cd ./$DBMS/$dbName
+	    read -p "Enter Table Name : " tableName;
+        if [[ -f $tableName ]];
 	   then 
-	read -p "Enter value that you want to search : " value;
-	result=$(sed -n -e'/'$value'/p' $tableName)
-    
-        if [ -z $result ]
-        then
-          echo "Not Found"
-        else
-           echo $result
-            
-        fi
+	        read -p "Enter value that you want to search : " value;
+	        result=$(sed -n -e'/'$value'/p' $tableName)
 
-  else
-           echo "Table Not found";      
+                if [ -z $result ]
+                then
+                  echo "Not Found"
+                else
+                   echo $result
+                   
+              awk 'BEGIN {FS = ":" ; print "'$result'"}' $tableName > $tableName.html
+
+                fi
+            
+        else
+            echo "Table Not found";      
 	   fi
-       cd ../..
-	else
-           echo "Database Not found";
+        cd ../..
+    else 
+        echo "Database Not found";
 	fi
 }
 
@@ -306,7 +307,7 @@ read_options(){
 		4)createTable;;
 		5)alterTable;;
 		6) ;;
-                7) ;;
+        7) ;;
 		8) ;;
 		9)selectRecord;;
 		10)displayTable;;
