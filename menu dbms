@@ -245,36 +245,92 @@ function dropTable {
            echo "Database Not found";
 	fi
 }
-function selectRecord {
-
+#Under Development
+function selectR {
 	read -p "Enter Database Name : " dbName;
-    if [[ -d ./$DBMS/$dbName ]];
+        if [[ -d ./$DBMS/$dbName ]];
 	then 
-        cd ./$DBMS/$dbName
-	    read -p "Enter Table Name : " tableName;
-        if [[ -f $tableName ]];
+	   cd ./$DBMS/$dbName
+	   read -p "Enter Table Name : " tableName;
+           if [[ -f $tableName ]];
 	   then 
-	        read -p "Enter value that you want to search : " value;
-	        result=$(sed -n -e'/'$value'/p' $tableName)
+		echo "~~~~~~~~~~~~~~~~~~~~~"	
+		echo " S E L E C T- M E N U"
+		echo "~~~~~~~~~~~~~~~~~~~~~"
+		echo "1. Select Records Matching Word"
+		echo "2. Select One Field"
+		echo "3. Select More Than Field"
+		echo "4. Exit"
+		local choice
+		read -p "Enter A Choice [ 1 - 4 ] " choice
+		case $choice in
+		1)selectRecordA;;
+		2)selectRecordO;;
+		3)selectRecordM;;
+		4)exit 0;; 
+		*) echo "Invalid Option";;
+	        esac
+	   else
+		echo "Table Not found";      
+           fi
+	   cd ../.. 
+       else 
+        echo "Database Not found";
+       fi
 
-                if [ -z $result ]
+}
+
+function selectRecordA {
+	 read -p "Enter value that you want to search : " value;
+	        result=$(sed -n -e'/'$value'/p' $tableName)
+                if [[ -z $result ]]
                 then
                   echo "Not Found"
                 else
-                   echo $result
-                   
-              awk 'BEGIN {FS = ":" ; print "'$result'"}' $tableName > $tableName.html
-
+                echo "$result" > "$tableName.html"
+		
                 fi
             
-        else
-            echo "Table Not found";      
-	   fi
-        cd ../..
-    else 
-        echo "Database Not found";
-	fi
 }
+function selectRecordO {
+	read -p "Enter Field Name that You Want Sort By It " Field
+        Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
+  if [[ $Fieldnum == "" ]]
+  then
+    echo "Not Found"
+  else
+
+	read -p "Enter condition that you want to search : " condition
+
+	res=$(grep -o $condition $tableName)
+	if [ -z $res ]
+        then
+              echo "Not Found"
+        else
+              echo "$res" > "$tableName.html"
+
+       fi
+ fi
+}
+#function selectRecordM {
+ # read -p "Enter Fields Name that You Want Sort By It " Field
+  #Fieldnum=$(awk 'BEGIN{FS=":"; OFS=" "}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
+  #if [[ $Fieldnum == "" ]]
+  #then
+   # echo "Not Found"
+  #else
+#	        read -p "Enter value that you want to search : " value;
+#	        result=$(sed -n -e'/'$value'/p' $tableName)
+ #               if [ -z $result ]
+  #              then
+   #               echo "Not Found"
+    #            else
+     #              echo "$result" > "$tableName.html"
+      #          fi
+#fi
+
+#}
+
 
 #function show menu
 show_menus() {
