@@ -496,7 +496,8 @@ function dropTable {
            echo "Database Not found";
 	fi
 }
-#Under Development
+
+
 function selectR {
 	read -p "Enter Database Name : " dbName;
         if [[ -d ./$DBMS/$dbName ]];
@@ -505,20 +506,23 @@ function selectR {
 	   read -p "Enter Table Name : " tableName;
            if [[ -f $tableName ]];
 	   then 
-		echo "~~~~~~~~~~~~~~~~~~~~~"	
-		echo " S E L E C T- M E N U"
-		echo "~~~~~~~~~~~~~~~~~~~~~"
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"	
+		echo "         S E L E C T- M E N U          "
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		echo "1. Select Records Matching Word"
 		echo "2. Select One Field"
 		echo "3. Select More Than Field"
-		echo "4. Exit"
+		echo "4. Select * From Table"
+		echo "5. Exit"
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		local choice
 		read -p "Enter A Choice [ 1 - 4 ] " choice
 		case $choice in
 		1)selectRecordA;;
 		2)selectRecordO;;
 		3)selectRecordM;;
-		4)exit 0;; 
+		4)selectT;;
+		5)exit 0;; 
 		*) echo "Invalid Option";;
 	        esac
 	   else
@@ -530,57 +534,108 @@ function selectR {
        fi
 
 }
+function selectT {
+	 read -p "Enter Format HTML or CSV : " format;
+	result=$(cat $tableName)
+	if [[ -z $result ]]
+           then
+                  echo "Not Found"
+           else
+			case $format in
+			HTML)
+			  echo "$result <br>" > "$tableName.html";;
+			CSV) 
+		          echo "$result" > "$tableName.csv";;
+			*) echo "Invalid Choice"
+		        esac
+	
+      fi
+            
+	
+
+}
+
 
 function selectRecordA {
 	 read -p "Enter value that you want to search : " value;
-	        result=$(sed -n -e'/'$value'/p' $tableName)
+	 read -p "Enter Format HTML or CSV : " format;
+		result=$(sed -n -e'/'$value'/p' $tableName)
                 if [[ -z $result ]]
                 then
                   echo "Not Found"
                 else
-                echo "$result" > "$tableName.html"
-		
+			case $format in
+			HTML)
+			  echo "$result <br>" > "$tableName.html";;
+			CSV) 
+		          echo "$result" > "$tableName.csv";;
+			*) echo "Invalid Choice"
+		        esac
+	
                 fi
             
 }
 function selectRecordO {
-	read -p "Enter Field Name that You Want Sort By It " Field
+	read -p "Enter Field Name " Field
         Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
   if [[ $Fieldnum == "" ]]
   then
     echo "Not Found"
   else
 
-	read -p "Enter condition that you want to search : " condition
-
-	res=$(grep -o $condition $tableName)
+	read -p "Enter Condition that you want to search : " condition
+	read -p "Enter Format HTML or CSV : " format;
+	res=$(egrep $condition $tableName | cut -d ":" -f$Fieldnum)
 	if [ -z $res ]
         then
               echo "Not Found"
         else
-              echo "$res" > "$tableName.html"
+                       case $format in
+			HTML)
+			  echo "$res <br>" > "$tableName.html";;
+			CSV) 
+		          echo "$res" > "$tableName.csv";;
+			*) echo "Invalid Choice"
+		        esac
 
        fi
  fi
 }
-#function selectRecordM {
- # read -p "Enter Fields Name that You Want Sort By It " Field
-  #Fieldnum=$(awk 'BEGIN{FS=":"; OFS=" "}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
-  #if [[ $Fieldnum == "" ]]
-  #then
-   # echo "Not Found"
-  #else
-#	        read -p "Enter value that you want to search : " value;
-#	        result=$(sed -n -e'/'$value'/p' $tableName)
- #               if [ -z $result ]
-  #              then
-   #               echo "Not Found"
-    #            else
-     #              echo "$result" > "$tableName.html"
-      #          fi
-#fi
+function selectRecordM {
+  read -p "Enter Fields Name " Fields
+  IFS=' ' read -r -a array <<< "$Fields"
+read -p "Enter condition that you want to search : " condition;
+read -p "Enter Format HTML or CSV : " format;
+for element in "${array[@]}"
+do
+   : 
+   Fieldnum=$(awk 'BEGIN{FS=":";}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$element'") print i}}}' $tableName)
 
-#}
+	  if [[ $Fieldnum == "" ]]
+	  then
+	    echo "Not Found"
+	  else
+		result=$(egrep $condition $tableName | cut -d ":" -f$Fieldnum)
+	
+		if [[ -z $result ]]
+                then
+                  echo "Not Found"
+                else
+                   case $format in
+			HTML)
+			  echo "$result <br>"  >> "$tableName.html";;
+			  
+			CSV) 
+		          echo "$result" >> "$tableName.csv";;
+			*) echo "Invalid Choice"
+		   esac
+                fi
+	   fi
+ 		
+done
+  
+}
+
 
 
 #function show menu
@@ -588,7 +643,7 @@ show_menu() {
 	echo "~~~~~~~~~~~~~~~~~~~~~"	
 	echo " D B M S- M E N U"
 	echo "~~~~~~~~~~~~~~~~~~~~~"
-    echo "1. Create Database"
+        echo "1. Create Database"
 	echo "2. List Datebases"
 	echo "3. Drop Datebase"
 	echo "4. Create Table"
@@ -597,7 +652,7 @@ show_menu() {
 	echo "7. Edit Record"
 	echo "8. Delete Record"
 	echo "9. Select Records" 
-    echo "10. Display A Table"
+        echo "10. Display A Table"
 	echo "11. Sort Table"
 	echo "12. Drop Table" 
 	echo "13. Exit"
@@ -614,7 +669,7 @@ read_option(){
 		4)createTable;;
 		5)alterTable;;
 		6) ;;
-        7) ;;
+                7) ;;
 		8) ;;
 		9)selectRecord;;
 		10)displayTable;;
