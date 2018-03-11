@@ -184,6 +184,224 @@ function createTable {
            echo "Database Not found";
 	fi
 }
+
+
+
+
+function alterTable {
+    read -p "Enter Database Name : " dbName;
+    if [[ -d ./$DBMS/$dbName ]];
+	then 
+       cd ./$DBMS/$dbName
+       read -p "Enter Table Name : " tableName;
+	   if [[ -f $tableName ]];
+	   then 
+	echo "1. Change Table Name"
+	echo "2. Add a New Column"
+	echo "3. Delete a Column" 
+	echo "4. Change Data Type Of a Certain Field"
+	read -p "Enter A Choice [ 1 - 4 ] " choice
+    case $choice in
+		1)read -p "Enter New Table Name : " newTableName;
+          mv $tableName $newTableName;
+          mv .$tableName .$newTableName;
+          if [[ $? == 0 ]];
+          then
+            echo "Database Renamed Successfully"
+          else
+            echo "Error Renaming Database"
+          fi
+         ;;
+        2)
+           sep=":"
+           colName=""
+           metaData=""
+           defaultFlag="0"
+           nullFlag="0"
+           read -p "Enter New Field Name : " colName;
+             echo "Type Of Column $colName : "
+             select type in int str
+             do
+               case $type in
+                   int) colType="int";break;;
+                   str) colType="str";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+           pk=$(awk ' BEGIN{FS=":"}{if($3=="PK"){print "Primary Key Already Exists"} }' .$tableName)
+          if [[ $pk ]];
+          then
+             primaryKey="";
+             echo "Is Column $colName Unique? "
+             select unique in yes no
+             do
+               case $unique in
+                   yes) isUnique="yes";break;;
+                   no) isUnique="no";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             echo "Does Column $colName Accept NULL? "
+             select null in yes no
+             do
+               case $null in
+                   yes) acceptNull="yes"; nullFlag="1";break;;
+                   no) acceptNull="no";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             echo "Does Column $colName Have a Default Value? "
+             select default in yes no
+             do
+               case $default in
+                   yes) read -p "Enter The Default Value Of Column $colName : " defaultValue; defaultFlag="1";break;;
+                   no) defaultValue="";break;;
+                   *) echo "Invalid Option";;
+               esac
+             done
+             metaData=$newLine$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+          else
+            echo "Is Column $colName a Primary Key? "
+                 select pk in yes no
+                 do
+                   case $pk in
+                       yes) 
+                       primaryKey="PK";
+                       isUnique="yes";
+                       acceptNull="no"
+                       defaultValue=""
+                       metaData=$newLine$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+                       break;;
+                       no) 
+                       primaryKey="";
+                       echo "Is Column $colName Unique? "
+                       select unique in yes no
+                       do
+                         case $unique in
+                             yes) isUnique="yes";break;;
+                             no) isUnique="no";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       echo "Does Column $colName Accept NULL? "
+                       select null in yes no
+                       do
+                         case $null in
+                             yes) acceptNull="yes"; nullFlag="1";break;;
+                             no) acceptNull="no";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       echo "Does Column $colName Have a Default Value? "
+                       select default in yes no
+                       do
+                         case $default in
+                             yes) read -p "Enter The Default Value Of Column $colName : " defaultValue; defaultFlag="1";break;;
+                             no) defaultValue="";break;;
+                             *) echo "Invalid Option";;
+                         esac
+                       done
+                       metaData=$colName$sep$colType$sep$primaryKey$sep$defaultValue$sep$isUnique$sep$acceptNull;
+                       break;;
+                       *) echo "Invalid Option";;
+                   esac
+                 done  
+                fi
+        echo -e $metaData  >> .$tableName
+        firstLine=$(awk 'BEGIN{FS=":"}{if(NR==1){print $0"'$sep$colName'"}}' $tableName)
+        sed -i "1s/.*/$firstLine/" $tableName
+                rowsNumber=$(awk 'END{print NR}' $tableName)
+              for((i=2;i<=rowsNumber;i++))
+           {
+             if [[ $defaultFlag == "1" ]]
+             then
+               line=$(awk 'BEGIN{FS=":"}{if(NR=="'$i'"){print $0"'$sep$defaultValue'"}}' $tableName)
+        sed -i "${i}s/.*/$line/" $tableName
+        else 
+            if [[ $nullFlag == "1" ]]
+             then
+             line=$(awk 'BEGIN{FS=":"}{if(NR=="'$i'"){print $0"'$sep'""NULL"}}' $tableName)
+        sed -i "${i}s/.*/$line/" $tableName
+        else 
+        line=$(awk 'BEGIN{FS=":"}{if(NR=="'$i'"){print $0"'$sep'"}}' $tableName)
+        sed -i "${i}s/.*/$line/" $tableName
+        fi
+        fi
+
+                
+           
+           }
+        
+        
+        if [[ $? == 0 ]]
+        then
+          echo "Column Added Successfully"
+        else
+          echo "Error Adding Column $colName"     
+	    fi         
+        ;;
+		3)
+
+           read -p "Enter Field Name You Want to Delete : " colName;
+
+                 colNumber=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$colName'") print i }}}' $tableName)
+      
+
+      
+                 cols=$(awk 'BEGIN{FS=":"}{if(NR==1){ print NF }}' $tableName)
+                 
+          if [[ $colNumber == $cols ]]
+          then 
+          result=$(awk 'BEGIN{FS=OFS=":"}{$NF=""; print $0}' $tableName)
+          cp /dev/null $tableName
+          echo "$result" >> $tableName
+          
+          else
+                 sed  -i "s/[^:]*://${colNumber}" $tableName
+          fi
+       
+
+         rowNumber=$(awk -v var="$colName" 'BEGIN{FS=":"} $0 ~ var {print NR}' .$tableName)
+         if [[ $rowNumber ]]
+         then
+           sed -i "${rowNumber}d" .$tableNames
+       fi
+               if [[ $? == 0 ]]
+        then
+          echo "Column Deleted Successfully"
+        else
+          echo "Error Deleting Column $colName"     
+	    fi         
+        ;;
+    
+		4)read -p "Enter Field Name You Want to Change Its Data Type : " colName;
+                 rowNumber=$(awk -v var="$colName" 'BEGIN{FS=":"} $0 ~ var {print NR}' .$tableName)
+        
+        
+        
+        ;;
+        
+		*) echo "Invalid Option";;
+    esac
+         
+         
+         
+         
+	   else
+          echo "Table Not found";
+       fi
+        cd ../..
+	else
+           echo "Database Not found";
+	fi
+}
+
+
+
+
+
+
+
 function sortTable {
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
@@ -195,7 +413,7 @@ function sortTable {
 	 read -p "Enter Field Name that You Want Sort By : " Field
         Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
 	 read -p "Enter ASC For Ascending , DESC For Descending " choice
-	   fname=$(awk 'BEGIN{FS="|"}{if($1=="'$Field'"){print $2}}' .$tableName)
+	   fname=$(awk 'BEGIN{FS=":"}{if($1=="'$Field'"){print $2}}' .$tableName)
 		 if [[ $fname == 'str' ]]
 	         then
 		  case $choice in
@@ -277,7 +495,7 @@ function selectRecord {
 }
 
 #function show menu
-show_menus() {
+show_menu() {
 	echo "~~~~~~~~~~~~~~~~~~~~~"	
 	echo " D B M S- M E N U"
 	echo "~~~~~~~~~~~~~~~~~~~~~"
@@ -290,14 +508,14 @@ show_menus() {
 	echo "7. Edit Record"
 	echo "8. Delete Record"
 	echo "9. Select Records" 
-        echo "10. Display A Table"
+    echo "10. Display A Table"
 	echo "11. Sort Table"
 	echo "12. Drop Table" 
 	echo "13. Exit"
 }
 
 #function read
-read_options(){
+read_option(){
 	local choice
 	read -p "Enter A Choice [ 1 - 13 ] " choice
 	case $choice in
@@ -321,7 +539,7 @@ read_options(){
 while true
 do
  
-	show_menus
-	read_options
+	show_menu
+	read_option
 done
 
