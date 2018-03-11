@@ -352,9 +352,8 @@ function alterTable {
                  
           if [[ $colNumber == $cols ]]
           then 
-          result=$(awk 'BEGIN{FS=OFS=":"}{$NF=""; print $0}' $tableName)
-          cp /dev/null $tableName
-          echo "$result" >> $tableName
+
+           sed  -i "s/:[^:]*$//" $tableName
           
           else
                  sed  -i "s/[^:]*://${colNumber}" $tableName
@@ -378,6 +377,29 @@ function alterTable {
                  rowNumber=$(awk -v var="$colName" 'BEGIN{FS=":"} $0 ~ var {print NR}' .$tableName)
         
         
+        dataType=$(awk 'BEGIN{FS=":"}{if($1=="'$colName'"){print $2}}' .$tableName)
+		 if [[ $dataType == 'str' ]]
+	         then
+              
+              sed -i "${rowNumber}s/str/int/" .$tableName
+              
+         if [[ $? == 0 ]]
+        then
+          echo "Datatype is Successfully Changed From String to Int. "
+        else
+          echo "Error Changing Datatype For Column $colName"     
+	    fi 
+              
+	          else
+               sed -i "${rowNumber}s/int/str/" .$tableName
+               
+                        if [[ $? == 0 ]]
+        then
+          echo "Datatype is Successfully Changed From Int to String. "
+        else
+          echo "Error Changing Datatype For Column $colName"     
+	    fi 
+        fi
         
         ;;
         
@@ -398,48 +420,59 @@ function alterTable {
 
 
 
-
-
-
-
-function sortTable {
+  function sortTable {
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
 	then 
-       cd ./$DBMS/$dbName
-       read -p "Enter Table Name : " tableName;
-	   if [[ -f $tableName ]];
-	   then 
-	 read -p "Enter Field Name that You Want Sort By : " Field
-        Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
-	 read -p "Enter ASC For Ascending , DESC For Descending " choice
-	   fname=$(awk 'BEGIN{FS=":"}{if($1=="'$Field'"){print $2}}' .$tableName)
-		 if [[ $fname == 'str' ]]
-	         then
-		  case $choice in
-			ASC)
-			  sort -t: -k $Fieldnum $tableName;;
-			DESC) 
-		          sort -r -t: -k $Fieldnum $tableName;;
-			*) echo "Invalid Choice"
-		  esac
-	          else
-                  case $choice in
-			ASC)
-			  sort -n -t: -k $Fieldnum  $tableName;;
-			DESC)
-		          sort -nr -t: -k $Fieldnum  $tableName;;
-			*) echo "Invalid Choice"
-		  esac
-           fi 
- else
-           echo "Table Not found";      
-	   fi
-       cd ../..
+        read -p "Enter Table Name : " tableName;
+        
+	    if [[ -f ./$DBMS/$dbName/$tableName ]];
+	    then 
+         cd ./$DBMS/$dbName
+	     read -p "Enter Field Name that You Want Sort By It " Field
+            Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
+if [[ $Fieldnum == "" ]]
+  then
+    echo "Not Found"
+  else
+	     read -p "Enter ASC For Ascending , DESC For Descending " choice
+	       dataType=$(awk 'BEGIN{FS=":"}{if($1=="'$Field'"){print $2}}' .$tableName)
+          
+		     if [[ $dataType == 'str' ]]
+	             then
+        
+		      case $choice in
+			    ASC)
+			      sort -t: -k $Fieldnum $tableName;;
+			    DESC) 
+		              sort -r -t: -k $Fieldnum $tableName;;
+			    *) echo "Invalid Choice"
+		      esac
+	              else
+                      case $choice in
+			    ASC)
+			      sort -n -t: -k $Fieldnum  $tableName;;
+			    DESC)
+		              sort -nr -t: -k $Fieldnum  $tableName;;
+			    *) echo "Invalid Choice"
+		      esac
+               fi 
+		     
+		    cd ../..
+fi    
+	    else
+               echo "Table Not found";
+	    fi
 	else
            echo "Database Not found";
 	fi
+
 }
+  
+  
+
+
+
 function dropTable {
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
