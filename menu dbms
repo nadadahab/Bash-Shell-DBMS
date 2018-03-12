@@ -353,7 +353,20 @@ function alterTable {
           if [[ $colNumber == $cols ]]
           then 
 
+          if [[ $cols == 1 ]]
+
+          then 
+
+          sed -i -r 's/\S+//1' $tableName
+else
+
+
+
+
+
+
            sed  -i "s/:[^:]*$//" $tableName
+         fi
           
           else
                  sed  -i "s/[^:]*://${colNumber}" $tableName
@@ -363,7 +376,7 @@ function alterTable {
          rowNumber=$(awk -v var="$colName" 'BEGIN{FS=":"} $0 ~ var {print NR}' .$tableName)
          if [[ $rowNumber ]]
          then
-           sed -i "${rowNumber}d" .$tableNames
+           sed -i "${rowNumber}d" .$tableName
        fi
                if [[ $? == 0 ]]
         then
@@ -417,9 +430,297 @@ function alterTable {
            echo "Database Not found";
 	fi
 }
+###################
+
+function insert
+{
+  row=""
+read -p "Enter Database Name : " dbName;
+  if ! [[ -d ./$DBMS/$dbName ]];then
+     echo "Database Not found";
+  else
+    cd ./$DBMS/$dbName
+    read -p "Enter Table Name : " tableName;
+    if ! [[ -f $tableName ]];then
+          echo "Table $tableName doesn't exist"
+    else
+        colsNum=$(cat .$tableName | wc -l)
+        sep=":"
+        newLine="\n"
+
+        for (( i=2; i<=$colsNum; i++))
+        do
+          
+          name=$(awk -F ":" '{ if(NR=='$i') print $1}' .$tableName)
+          ttype=$( awk -F ":" '{if(NR=='$i') print $2}' .$tableName)
+          key=$( awk -F ":" '{if(NR=='$i') print $3}' .$tableName)
+          default=$( awk -F ":" '{if(NR=='$i') print $4}' .$tableName)
+          unique=$( awk -F ":" '{if(NR=='$i') print $5}' .$tableName)
+          null=$( awk -F ":" '{if(NR=='$i') print $6}' .$tableName)
+            echo -e "Enter $name ($ttype) Value: \n"         
+          read input
+
+
+          if [[ $null == "no" ]]; then
+           while [[ true ]]; do
+            if [[ $input = "" ]]; then
+             echo -e "invalid input, coulmn doesn't accept null !!"
+            else
+             break;
+            fi
+            echo -e "Enter $name ($ttype) Value: \n"
+            
+            read input
+           done
+         fi
+
+         if ! [[ $default == "" ]]; then
+          if [[ $input = "" ]]; then
+            input=$default
+          fi  
+         fi 
+
+
+         if [[ $ttype == "int" ]]; then
+
+           while ! [[ $input =~ ^[0-9]*$ ]]; do
+
+            echo -e "invalid DataType !!"
+            cd ../..
+            insert
+            return
+           done
+         fi
+
+        if [[ $key == "PK" ]]; then
+           
+            if [[ $input =~ ^[`awk 'BEGIN{FS=":" ; ORS=" "}{if(NR != 1)print $(('$i'-1))}' $tableName`]$ ]]; then
+             echo -e "invalid input for Primary Key !!"
+            
+            cd ../..
+            insert
+            return
+           
+         fi
+         fi
+
+
+      if [[ $unique == "yes" ]]; then
+           
+            if [[ $input =~ ^[`awk 'BEGIN{FS=":" ; ORS=" "}{if(NR != 1)print $(('$i'-1))}' $tableName`]$ ]]; then
+             echo -e "enter a unique value!!"
+            
+            cd ../..
+            insert
+            return
+  
+         fi
+         fi   
 
 
 
+      if [[ $i == $colsNum ]]; then
+       row+=$input$newLine
+      else
+       row+=$input$sep
+      fi
+
+
+
+        done #for end
+
+        echo -e $row"\c" >> $tableName
+       
+
+        if [[ $? == 0 ]]
+        then
+         echo "Data Inserted Successfully"
+        else
+         echo "Error Inserting Data into Table $tableName"
+        fi
+  row=""
+cd ../..
+    fi
+fi
+}
+
+
+
+
+
+
+
+
+function update
+{
+
+read -p "Enter Database Name : " dbName;
+  if ! [[ -d ./$DBMS/$dbName ]];then
+     echo "Database Not found";
+  else
+    cd ./$DBMS/$dbName
+    read -p "Enter Table Name : " tableName;
+    if ! [[ -f $tableName ]];then
+          echo "Table $tableName doesn't exist"
+    else
+      read -p "Enter set Column name : " setv
+      sf=$(awk -F ":" '{ if(NR==1) {for(i=1;i<=NF;i++){if($i=="'$setv'") print i}}}' $tableName)
+      
+      if [[ $sf == "" ]]
+      then
+        echo "Not Found"
+      else
+        read -p "Enter condition Column name : " cf
+        cf=$(awk -F ":" '{ if(NR==1) {for(i=1;i<=NF;i++){if($i=="'$cf'") print i}}}' $tableName)
+        if [[ $cf == "" ]]
+        then
+          echo "Not Found"
+        else
+          echo -e "Enter Condition Value: \c"
+          read val
+          res=$(awk -F ":" '{if ($'$cf'=="'$val'" && NR!=1) print $'$cf'}' $tableName)
+
+          if [[ $res == "" ]]
+          then
+           echo "Value Not Found"
+           
+          else
+
+          n=$(grep -n $setv .$tableName | cut -d: -f1)
+          name=$(awk -F ":" '{ if(NR=='$n') print $1}' .$tableName)
+          ttype=$( awk -F ":" '{if(NR=='$n') print $2}' .$tableName)
+          key=$( awk -F ":" '{if(NR=='$n') print $3}' .$tableName)
+          default=$( awk -F ":" '{if(NR=='$n') print $4}' .$tableName)
+          unique=$( awk -F ":" '{if(NR=='$n') print $5}' .$tableName)
+          null=$( awk -F ":" '{if(NR=='$n') print $6}' .$tableName)
+            read -p "Enter new value : " nv;
+
+           NR=$(awk -F ":" '{if ($'$cf'=="'$val'" && NR!=1) print NR}' $tableName)
+           for it in $NR;
+           do
+
+            if [[ $null == "no" ]]; then
+           while [[ true ]]; do
+            if [[ $nv = "" ]]; then
+             echo -e "invalid input, coulmn doesn't accept null !!"
+            else
+             break;
+            fi
+            read -p "Enter new value : " nv;
+           done
+         fi
+
+
+
+         if ! [[ $default == "" ]]; then
+          if [[ $nv = "" ]]; then
+            nv=$default
+          fi  
+         fi 
+
+
+         if [[ $ttype == "int" ]]; then
+
+           while ! [[ $nv =~ ^[0-9]*$ ]]; do
+
+            echo -e "invalid DataType !!"
+            cd ../..
+            update
+            return
+           done
+         fi
+
+
+        if [[ $key == "PK" ]]; then
+           
+            if [[ $nv =~ ^[`awk 'BEGIN{FS=":" ; ORS=" "}{if(NR != 1)print $sf}' $tableName`]$ ]]; then
+             echo -e "invalid input for Primary Key !!"
+            
+            cd ../..
+            update
+           return
+         fi
+         fi
+
+
+      if [[ $unique == "yes" ]]; then
+           
+            if [[ $nv =~ ^[`awk 'BEGIN{FS=":" ; ORS=" "}{if(NR != 1)print $sf}' $tableName`]$ ]]; then
+             echo -e "enter a unique value!!"
+            
+            cd ../..
+            update
+            return
+         fi
+         fi
+
+
+            oldValue=$(awk -F ":" '{if(NR=='$it'){for(i=1;i<=NF;i++){if(i=='$sf') print $i}}}' $tableName)
+            sed -i ''$it's/'$oldValue'/'$nv'/g' $tableName
+            echo "Row Updated Successfully"
+          done
+
+fi           
+fi
+fi
+fi
+cd ../..
+fi
+}
+
+
+
+
+
+
+
+
+
+
+function delete
+{
+
+read -p "Enter Database Name : " dbName;
+  if ! [[ -d ./$DBMS/$dbName ]];then
+     echo "Database Not found";
+  else
+    cd ./$DBMS/$dbName
+    read -p "Enter Table Name : " tableName;
+    if ! [[ -f $tableName ]];then
+          echo "Table $tableName doesn't exist"
+    else
+      read -p "Enter condition Column name : " cf
+      cf=$(awk -F ":" '{ if(NR==1) {for(i=1;i<=NF;i++){if($i=="'$cf'") print i}}}' $tableName)
+      if [[ $cf == "" ]]
+      then
+        echo "Not Found"
+      else
+        echo -e "Enter Condition Value: \c"
+        read val
+        res=$(awk -F ":" '{if ($'$cf'=="'$val'" && NR!=1) print $'$cf'}' $tableName)
+        if [[ $res == "" ]]
+        then
+         echo "Value Not Found"
+         
+        else
+         
+         NR=$(awk -F ":" '{if ($'$cf'=="'$val'" && NR!=1) print $0}' $tableName)
+        
+         for it in $NR;
+         do
+          
+         sed -i "/$it/d" $tableName 
+         echo "Row Deleted Successfully"
+         done
+         
+fi
+fi
+fi
+cd ../..
+fi
+}
+
+#################
   function sortTable {
     read -p "Enter Database Name : " dbName;
     if [[ -d ./$DBMS/$dbName ]];
@@ -434,6 +735,7 @@ function alterTable {
 if [[ $Fieldnum == "" ]]
   then
     echo "Not Found"
+    cd ../..
   else
 	     read -p "Enter ASC For Ascending , DESC For Descending " choice
 	       dataType=$(awk 'BEGIN{FS=":"}{if($1=="'$Field'"){print $2}}' .$tableName)
@@ -583,7 +885,7 @@ function selectRecordO {
 	read -p "Enter Condition that you want to search : " condition
 	read -p "Enter Format HTML or CSV : " format;
 	      
-	res=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" ~ c {print $'$Fieldnum'}' $tableName)
+	res=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" == c {print $'$Fieldnum'}' $tableName)
 	echo $res
 	if [ -z $res ]
         then
@@ -618,7 +920,7 @@ do
 	  then
 	    echo "Not Found"
 	  else
-		result=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" ~ c {print $'$Fieldnum'}' $tableName)
+		result=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" == c {print $'$Fieldnum'}' $tableName)
 	
 		if [[ -z $result ]]
                 then
@@ -655,7 +957,7 @@ show_menu() {
 	echo "7. Edit Record"
 	echo "8. Delete Record"
 	echo "9. Select Records" 
-        echo "10. Display A Table"
+  echo "10. Display A Table"
 	echo "11. Sort Table"
 	echo "12. Drop Table" 
 	echo "13. Exit"
@@ -671,10 +973,10 @@ read_option(){
 		3)dropDB;;
 		4)createTable;;
 		5)alterTable;;
-		6) ;;
-                7) ;;
-		8) ;;
-		9)selectRecord;;
+		6) insert ;;
+    7) update;;
+    8) delete;;
+		9)selectR;;
 		10)displayTable;;
 		11)sortTable;;
 		12)dropTable;;
@@ -689,4 +991,5 @@ do
 	show_menu
 	read_option
 done
+
 
