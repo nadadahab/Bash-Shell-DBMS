@@ -497,7 +497,6 @@ function dropTable {
 	fi
 }
 
-
 function selectR {
 	read -p "Enter Database Name : " dbName;
         if [[ -d ./$DBMS/$dbName ]];
@@ -536,8 +535,8 @@ function selectR {
 }
 function selectT {
 	 read -p "Enter Format HTML or CSV : " format;
-	result=$(cat $tableName)
-	if [[ -z $result ]]
+	 result=$(cat $tableName)
+	   if [[ -z $result ]]
            then
                   echo "Not Found"
            else
@@ -576,16 +575,16 @@ function selectRecordA {
             
 }
 function selectRecordO {
-	read -p "Enter Field Name " Field
+	read -p "Enter Field Name that you want select it" Field
+	read -p "Enter Field Name to search in it " FieldS
         Fieldnum=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
-  if [[ $Fieldnum == "" ]]
-  then
-    echo "Not Found"
-  else
-
+	FieldnumS=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$FieldS'") print i}}}' $tableName)
+ 	echo $FieldnumS
 	read -p "Enter Condition that you want to search : " condition
 	read -p "Enter Format HTML or CSV : " format;
-	res=$(egrep $condition $tableName | cut -d ":" -f$Fieldnum)
+	      
+	res=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" ~ c {print $'$Fieldnum'}' $tableName)
+	echo $res
 	if [ -z $res ]
         then
               echo "Not Found"
@@ -597,15 +596,19 @@ function selectRecordO {
 		          echo "$res" > "$tableName.csv";;
 			*) echo "Invalid Choice"
 		        esac
+	
 
        fi
- fi
+ 
 }
 function selectRecordM {
-  read -p "Enter Fields Name " Fields
+  read -p "Enter Fields Names that you want select it" Fields
+  read -p "Enter Field Name to search in it " Field
+	FieldnumS=$(awk 'BEGIN{FS=":"}{if(NR==1){for(i=1;i<=NF;i++){if($i=="'$Field'") print i}}}' $tableName)
   IFS=' ' read -r -a array <<< "$Fields"
 read -p "Enter condition that you want to search : " condition;
 read -p "Enter Format HTML or CSV : " format;
+rm $tableName.html 
 for element in "${array[@]}"
 do
    : 
@@ -615,7 +618,7 @@ do
 	  then
 	    echo "Not Found"
 	  else
-		result=$(egrep $condition $tableName | cut -d ":" -f$Fieldnum)
+		result=$(awk -v c="$condition" 'BEGIN{FS=":"} $"'$FieldnumS'" ~ c {print $'$Fieldnum'}' $tableName)
 	
 		if [[ -z $result ]]
                 then
